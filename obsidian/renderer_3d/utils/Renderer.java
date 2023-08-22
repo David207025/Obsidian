@@ -5,18 +5,20 @@ import obsidian.core.utils.Graphics;
 import java.awt.*;
 
 public class Renderer {
-    private Matrix scaling_factor;
+    private final Matrix scaling_factor;
 
-    private Camera camera = new Camera(0, 0, -15);
+    private final Camera camera = new Camera(0, 0, -15);
 
     public Matrix camera_pos = new Matrix(new double[][]{{camera.getX()}, {camera.getY()}, {camera.getZ()}});
     public Renderer(Matrix scaling_factor) {
         this.scaling_factor = scaling_factor;
     }
 
-    public Camera get_camera() {return camera;};
+    public Camera get_camera() {return camera;}
+
 
     public void render_mesh(Mesh mesh, Color color, boolean filled, Graphics graphics, Dimension windowSize) {
+
         camera_pos = new Matrix(new double[][]{{camera.getX()}, {camera.getY()}, {camera.getZ()}});
         Mesh m = new Mesh(new Matrix[mesh.getMatrices().length]);
         int[] x_points = new int[mesh.getMatrices().length];
@@ -36,7 +38,23 @@ public class Renderer {
                 y_points[i] = (int) (m.getMatrices()[i].get_points()[1][0] + windowSize.getHeight() / 2);
             }
         }
-        graphics.draw_polygon(x_points, y_points, color);
+        if (!filled) {
+            graphics.draw_polygon(x_points, y_points, color);
+        } else {
+            graphics.fill_polygon(x_points, y_points, color);
+        }
+    }
+
+    public void render_object(Object object, Color color, boolean filled, Graphics graphics, Dimension windowSize) {
+
+            for (int j = 0; j < object.get_meshes().length; j++) {
+                Mesh mesh = object.get_meshes()[j];
+
+                render_mesh(mesh, color, filled, graphics, windowSize);
+
+        }
 
     }
+
+
 }

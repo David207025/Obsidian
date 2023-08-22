@@ -2,7 +2,6 @@ package obsidian.core.utils;
 
 import java.awt.*;
 import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,7 +37,7 @@ public class Canvas extends java.awt.Canvas {
     private Thread thread;
 
     public Thread get_thread() {return thread;};
-    private AtomicBoolean running = new AtomicBoolean(false);
+    private final AtomicBoolean running = new AtomicBoolean(false);
     private int fps;
 
     public Canvas(Consumer<Void> loop) {
@@ -48,7 +47,7 @@ public class Canvas extends java.awt.Canvas {
     @Override
     public void addNotify() {
         super.addNotify();
-        createBufferStrategy(2);
+        createBufferStrategy(3);
         start();
     }
 
@@ -109,8 +108,10 @@ public class Canvas extends java.awt.Canvas {
     }
 
     protected void render() {
+        this.isDoubleBuffered();
         while (bs == null) {
             bs = getBufferStrategy();
+
         }
         do {
             // The following loop ensures that the contents of the drawing buffer
@@ -134,6 +135,7 @@ public class Canvas extends java.awt.Canvas {
                     // Dispose the graphics
 
                 } catch (Exception e) {
+                    System.out.println(e);
                 }
 
                 // Repeat the rendering if the drawing buffer contents
