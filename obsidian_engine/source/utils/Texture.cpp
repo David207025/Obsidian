@@ -16,10 +16,6 @@ Texture::Texture(const std::string &path, GLint filtering) {
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data); // always use RGBA
 
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        std::cerr << "OpenGL error after glTexImage2D: " << err << std::endl;
-    }
 
     glGenerateMipmap(GL_TEXTURE_2D);
 

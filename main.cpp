@@ -110,56 +110,56 @@ public:
         gfx.clear(0, 0, 0, 1);
 
 
-        // gfx.fillTriangle(Vertex(glm::vec3(-10, -10, -20), glm::vec4(1, 0, 0, 1)),
-        //                  Vertex(glm::vec3(10, -10, -50), glm::vec4(0, 1, 0, 1)),
-        //                  Vertex(glm::vec3(-10, 10, -50), glm::vec4(0, 0, 1, 1)));
+        // // gfx.fillTriangle(Vertex(glm::vec3(-10, -10, -20), glm::vec4(1, 0, 0, 1)),
+        // //                  Vertex(glm::vec3(10, -10, -50), glm::vec4(0, 1, 0, 1)),
+        // //                  Vertex(glm::vec3(-10, 10, -50), glm::vec4(0, 0, 1, 1)));
+        // //
+        // //gfx.drawTexture(*texture, glm::vec3(-2, 2, 2), glm::vec3(2, 2, 2), glm::vec3(2, -2, -2), glm::vec3(-2, -2, -2));
         //
-        gfx.drawTexture(*texture, glm::vec3(-2, 2, 2), glm::vec3(2, 2, 2), glm::vec3(2, -2, -2), glm::vec3(-2, -2, -2));
-
-        gfx.drawPolygon(std::vector<Vertex> {
-            Vertex(glm::vec3(-1, -1,  1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3( 1, -1,  1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3( 1,  1,  1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3(-1,  1,  1), glm::vec4(1, 0, 0, 1)),
-
-        });
-
-        gfx.drawPolygon(std::vector<Vertex> {
-            Vertex(glm::vec3(-1, -1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3( 1, -1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3( 1,  1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3(-1,  1, -1), glm::vec4(1, 0, 0, 1))
-        });
-
-        gfx.drawPolygon(std::vector<Vertex> {
-            Vertex(glm::vec3(-1, -1,  1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3(-1, -1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3(-1,  1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3(-1,  1,  1), glm::vec4(1, 0, 0, 1)),
-
-        });
-
-        gfx.drawPolygon(std::vector<Vertex> {
-            Vertex(glm::vec3(1, -1,  1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3(1, -1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3(1,  1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3(1,  1,  1), glm::vec4(1, 0, 0, 1)),
-        });
-
-        gfx.drawPolygon(std::vector<Vertex> {
-            Vertex(glm::vec3(-1, 1,  1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3(-1, 1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3( 1, 1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3( 1, 1,  1), glm::vec4(1, 0, 0, 1)),
-
-        });
-
-        gfx.drawPolygon(std::vector<Vertex> {
-            Vertex(glm::vec3(-1, -1,  1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3(-1, -1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3( 1, -1, -1), glm::vec4(1, 0, 0, 1)),
-            Vertex(glm::vec3( 1, -1,  1), glm::vec4(1, 0, 0, 1)),
-        });
+        // gfx.fillPolygon(std::vector<Vertex> {
+        //     Vertex(glm::vec3(-1, -1,  1), glm::vec4(1, 0, 0, 1)),
+        //     Vertex(glm::vec3( 1, -1,  1), glm::vec4(1, 0, 0, 1)),
+        //     Vertex(glm::vec3( 1,  1,  1), glm::vec4(1, 0, 0, 1)),
+        //     Vertex(glm::vec3(-1,  1,  1), glm::vec4(1, 0, 0, 1)),
+        //
+        // });
+        //
+        // gfx.fillPolygon(std::vector<Vertex> {
+        //     Vertex(glm::vec3(-1, -1, -1), glm::vec4(1, 1, 0, 1)),
+        //     Vertex(glm::vec3( 1, -1, -1), glm::vec4(1, 1, 0, 1)),
+        //     Vertex(glm::vec3( 1,  1, -1), glm::vec4(1, 1, 0, 1)),
+        //     Vertex(glm::vec3(-1,  1, -1), glm::vec4(1, 1, 0, 1))
+        // });
+        //
+        // gfx.fillPolygon(std::vector<Vertex> {
+        //     Vertex(glm::vec3(-1, -1,  1), glm::vec4(0, 1, 1, 1)),
+        //     Vertex(glm::vec3(-1, -1, -1), glm::vec4(0, 1, 1, 1)),
+        //     Vertex(glm::vec3(-1,  1, -1), glm::vec4(0, 1, 1, 1)),
+        //     Vertex(glm::vec3(-1,  1,  1), glm::vec4(0, 1, 1, 1)),
+        //
+        // });
+        //
+        // gfx.fillPolygon(std::vector<Vertex> {
+        //     Vertex(glm::vec3(1, -1,  1), glm::vec4(1, 0, 1, 1)),
+        //     Vertex(glm::vec3(1, -1, -1), glm::vec4(1, 0, 1, 1)),
+        //     Vertex(glm::vec3(1,  1, -1), glm::vec4(1, 0, 1, 1)),
+        //     Vertex(glm::vec3(1,  1,  1), glm::vec4(1, 0, 1, 1)),
+        // });
+        //
+        // gfx.fillPolygon(std::vector<Vertex> {
+        //     Vertex(glm::vec3(-1, 1,  1), glm::vec4(0, 1, 0, 1)),
+        //     Vertex(glm::vec3(-1, 1, -1), glm::vec4(0, 1, 0, 1)),
+        //     Vertex(glm::vec3( 1, 1, -1), glm::vec4(0, 1, 0, 1)),
+        //     Vertex(glm::vec3( 1, 1,  1), glm::vec4(0, 1, 0, 1)),
+        //
+        // });
+        //
+        // gfx.fillPolygon(std::vector<Vertex> {
+        //     Vertex(glm::vec3(-1, -1,  1), glm::vec4(0, 0, 1, 1)),
+        //     Vertex(glm::vec3(-1, -1, -1), glm::vec4(0, 0, 1, 1)),
+        //     Vertex(glm::vec3( 1, -1, -1), glm::vec4(0, 0, 1, 1)),
+        //     Vertex(glm::vec3( 1, -1,  1), glm::vec4(0, 0, 1, 1)),
+        // });
 
     }
 };

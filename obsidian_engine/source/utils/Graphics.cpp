@@ -50,11 +50,6 @@ bool Graphics::initialize(const Obsidian &engine) {
     int height = engine.getWindowHeight();
     setWindowSize(width, height);
 
-    glGenVertexArrays(1, &rectVAO);
-    glGenBuffers(1, &rectVBO);
-    glBindVertexArray(rectVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, rectVBO);
-
     // Corrected layout: 9 floats
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
@@ -68,6 +63,7 @@ bool Graphics::initialize(const Obsidian &engine) {
 
     glViewport(0, 0, width, height);
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     resize(width, height);
 
     // Default 1x1 white texture
@@ -517,6 +513,11 @@ void Graphics::drawTexture(Texture texture,
     useShader("default");
     bindTexture(texture.getData());
 
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
     // Ensure the shader’s sampler uniform is set (assuming currentProgram is active)
     GLint loc = glGetUniformLocation(currentProgram, "uTexture");
     if (loc >= 0) glUniform1i(loc, 0);
@@ -573,6 +574,122 @@ void Graphics::drawTexture(Texture texture,
     glBindVertexArray(0);
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
+}
+
+bool Graphics::loadFont(const unsigned char* fontBuffer, int fontBufferSize, float pixelHeight) {
+    // Allocate bitmap for baking font atlas
+    unsigned char* bitmap = new unsigned char[m_font.bitmapWidth * m_font.bitmapHeight];
+    memset(bitmap, 0, m_font.bitmapWidth * m_font.bitmapHeight);
+
+    int bakeResult = stbtt_BakeFontBitmap(
+        fontBuffer, 0, pixelHeight,
+        bitmap, m_font.bitmapWidth, m_font.bitmapHeight,
+        32, 96, m_font.cdata);
+
+    if (bakeResult <= 0) {
+        std::cerr << "Failed to bake font bitmap\n";
+        delete[] bitmap;
+        return false;
+    }
+
+    // Create OpenGL texture for the font atlas
+    glGenTextures(1, &m_font.textureID);
+    glBindTexture(GL_TEXTURE_2D, m_font.textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_font.bitmapWidth, m_font.bitmapHeight,
+                 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    delete[] bitmap;
+    return true;
+}
+
+void Graphics::renderText(const std::string& text, const glm::vec3& position, float scale,
+                          glm::vec3 color, glm::vec3 rotationEuler) {
+    if (m_font.textureID == 0) {
+        std::cerr << "Font not loaded!\n";
+        return;
+    }
+
+    useShader("text");
+
+    glUniform3f(glGetUniformLocation(currentProgram, "textColor"), color.r, color.g, color.b);
+
+    // Build model matrix: translate + rotate + scale (uniform scale for simplicity)
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+
+    if (rotationEuler != glm::vec3(0.0f)) {
+        model = glm::rotate(model, glm::radians(rotationEuler.x), glm::vec3(1,0,0));
+        model = glm::rotate(model, glm::radians(rotationEuler.y), glm::vec3(0,1,0));
+        model = glm::rotate(model, glm::radians(rotationEuler.z), glm::vec3(0,0,1));
+    }
+
+    model = glm::scale(model, glm::vec3(scale));
+
+    // Compose MVP = projection * view * model
+    glm::mat4 mvp = m_projection * m_camera.getViewMatrix() * model;
+    setUniformMat4("text", "uMVP", mvp);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_font.textureID);
+
+    GLuint textVAO, textVBO;
+    glGenVertexArrays(1, &textVAO);
+    glGenBuffers(1, &textVBO);
+
+    glBindVertexArray(textVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+    float x = 0.0f;  // Text quad coords start at (0,0) in local model space
+    float y = 0.0f;
+
+    for (char c : text) {
+        if (c < 32 || c >= 128) continue;
+
+        stbtt_bakedchar* b = &m_font.cdata[c - 32];
+
+        float x0 = x + b->xoff;
+        float y0 = y - b->yoff;
+        float x1 = x0 + (b->x1 - b->x0);
+        float y1 = y0 - (b->y1 - b->y0);
+
+        float s0 = b->x0 / (float)m_font.bitmapWidth;
+        float t0 = b->y0 / (float)m_font.bitmapHeight;
+        float s1 = b->x1 / (float)m_font.bitmapWidth;
+        float t1 = b->y1 / (float)m_font.bitmapHeight;
+
+        float vertices[6][4] = {
+            { x0, y0, s0, t0 },
+            { x1, y0, s1, t0 },
+            { x1, y1, s1, t1 },
+
+            { x0, y0, s0, t0 },
+            { x1, y1, s1, t1 },
+            { x0, y1, s0, t1 }
+        };
+
+        glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        x += b->xadvance;
+    }
+
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glDeleteBuffers(1, &textVBO);
+    glDeleteVertexArrays(1, &textVAO);
 }
 
 void Graphics::setUniformMat4(const std::string& shaderName, const std::string& uniform, const glm::mat4& matrix) {
@@ -633,9 +750,6 @@ void Graphics::cleanup() {
         glDeleteProgram(prog);
     }
     shaderPrograms.clear();
-
-    if (rectVBO) glDeleteBuffers(1, &rectVBO);
-    if (rectVAO) glDeleteVertexArrays(1, &rectVAO);
 }
 
 GLuint Graphics::getDefaultTexture() {

@@ -12,12 +12,17 @@ add_library(glad STATIC
         obsidian_engine/core.h
         obsidian_engine/source/utils/Graphics.cpp
         obsidian_engine/include/utils/Graphics.h
-        obsidian_engine/third_party/stb_setup.h
         obsidian_engine/include/utils/Camera.h
         obsidian_engine/include/utils/Texture.h
         obsidian_engine/source/utils/Texture.cpp
         obsidian_engine/include/includes.h
         obsidian_engine/source/includes.cpp
+        obsidian_engine/include/utils/RenderableObject.h
+        obsidian_engine/include/utils/ObjectTypes/Triangle.h
+        obsidian_engine/include/utils/Vertex.h
+        obsidian_engine/include/utils/Font.h
+        obsidian_engine/include/utils/ObjectTypes/Circle.h
+        obsidian_engine/include/utils/ObjectTypes/Polygon.h
 )
 target_include_directories(glad PUBLIC include)
 
