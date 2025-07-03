@@ -1,5 +1,5 @@
 
-#include "../../include/utils/Texture.h"
+#include "../../include/includes.h"
 
 Texture::Texture(const std::string &path, GLint filtering) {
     int w, h, c;
@@ -27,6 +27,11 @@ Texture::Texture(const std::string &path, GLint filtering) {
     stbi_image_free(data);
     texture = tex;
 }
+
+Texture::Texture(GLuint tex) {
+    texture = tex;
+}
+
 
 GLuint Texture::getData() {
     return texture;

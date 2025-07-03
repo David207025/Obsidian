@@ -9,12 +9,10 @@
 
 class Texture {
     GLuint texture = 0;
-    GLuint VAO = 0;
-    GLuint VBO = 0;
-    GLuint EBO = 0;
 public:
 
     Texture(const std::string& path, GLint filtering);
+    Texture(GLuint texture);
 
     GLuint getData();
 };

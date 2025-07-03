@@ -84,6 +84,20 @@ build CMakeFiles/glad.dir/obsidian_engine/source/includes.cpp.o: CXX_COMPILER__g
   OBJECT_DIR = CMakeFiles/glad.dir
   OBJECT_FILE_DIR = CMakeFiles/glad.dir/obsidian_engine/source
 
+build CMakeFiles/glad.dir/obsidian_engine/source/utils/Shape.cpp.o: CXX_COMPILER__glad_unscanned_Debug /Users/davidvacaroiu/Documents/_Code_/_CLion_/obsidian/obsidian_engine/source/utils/Shape.cpp || cmake_object_order_depends_target_glad
+  DEP_FILE = CMakeFiles/glad.dir/obsidian_engine/source/utils/Shape.cpp.o.d
+  FLAGS = -g -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk -fcolor-diagnostics
+  INCLUDES = -I/Users/davidvacaroiu/Documents/_Code_/_CLion_/obsidian/include
+  OBJECT_DIR = CMakeFiles/glad.dir
+  OBJECT_FILE_DIR = CMakeFiles/glad.dir/obsidian_engine/source/utils
+
+build CMakeFiles/glad.dir/obsidian_engine/source/utils/Object.cpp.o: CXX_COMPILER__glad_unscanned_Debug /Users/davidvacaroiu/Documents/_Code_/_CLion_/obsidian/obsidian_engine/source/utils/Object.cpp || cmake_object_order_depends_target_glad
+  DEP_FILE = CMakeFiles/glad.dir/obsidian_engine/source/utils/Object.cpp.o.d
+  FLAGS = -g -std=gnu++17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk -fcolor-diagnostics
+  INCLUDES = -I/Users/davidvacaroiu/Documents/_Code_/_CLion_/obsidian/include
+  OBJECT_DIR = CMakeFiles/glad.dir
+  OBJECT_FILE_DIR = CMakeFiles/glad.dir/obsidian_engine/source/utils
+
 
 # =============================================================================
 # Link build statements for STATIC_LIBRARY target glad
@@ -92,7 +106,7 @@ build CMakeFiles/glad.dir/obsidian_engine/source/includes.cpp.o: CXX_COMPILER__g
 #############################################
 # Link the static library libglad.a
 
-build libglad.a: CXX_STATIC_LIBRARY_LINKER__glad_Debug CMakeFiles/glad.dir/obsidian_engine/third_party/glad/src/glad.c.o CMakeFiles/glad.dir/obsidian_engine/source/obsidian.cpp.o CMakeFiles/glad.dir/obsidian_engine/source/utils/Graphics.cpp.o CMakeFiles/glad.dir/obsidian_engine/source/utils/Texture.cpp.o CMakeFiles/glad.dir/obsidian_engine/source/includes.cpp.o
+build libglad.a: CXX_STATIC_LIBRARY_LINKER__glad_Debug CMakeFiles/glad.dir/obsidian_engine/third_party/glad/src/glad.c.o CMakeFiles/glad.dir/obsidian_engine/source/obsidian.cpp.o CMakeFiles/glad.dir/obsidian_engine/source/utils/Graphics.cpp.o CMakeFiles/glad.dir/obsidian_engine/source/utils/Texture.cpp.o CMakeFiles/glad.dir/obsidian_engine/source/includes.cpp.o CMakeFiles/glad.dir/obsidian_engine/source/utils/Shape.cpp.o CMakeFiles/glad.dir/obsidian_engine/source/utils/Object.cpp.o
   ARCH_FLAGS = -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles/glad.dir

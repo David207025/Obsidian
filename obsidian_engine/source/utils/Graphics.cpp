@@ -1,6 +1,4 @@
-#include "../../include/utils/Graphics.h"
-#include "../../include/obsidian.h"
-
+#include "../../include/includes.h"
 
 // Vertex Shader
 static const char* defaultVertexShader = R"glsl(
@@ -33,6 +31,32 @@ out vec4 FragColor;
 void main() {
     vec4 texColor = texture(uTexture, vUV);
     FragColor = texColor * vColor;
+}
+)glsl";
+
+
+
+static const char* occlusionVertexShader = R"glsl(
+#version 330 core
+
+layout(location = 0) in vec3 aPos;
+
+uniform mat4 uMVP;
+
+void main() {
+    gl_Position = uMVP * vec4(aPos, 1.0);
+}
+)glsl";
+
+// Fragment Shader
+static const char* occlusionFragmentShader = R"glsl(
+#version 330 core
+
+out vec4 FragColor;
+
+void main() {
+    // Output solid white, no transparency, no textures
+    FragColor = vec4(1.0);
 }
 )glsl";
 
@@ -73,6 +97,8 @@ bool Graphics::initialize(const Obsidian &engine) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whitePixel);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    loadShader(occlusionVertexShader, occlusionFragmentShader, "occlusion");
 
     return loadShader(defaultVertexShader, defaultFragmentShader, "default");
 }
@@ -143,438 +169,438 @@ void Graphics::clear(float r, float g, float b, float a) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Graphics::drawTriangle(const Vertex& v1, const Vertex& v2, const Vertex& v3) {
-    useShader("default");
-    bindTexture(getDefaultTexture());
-
-    float vertices[] = {
-        // x, y, z,    r, g, b, a,     u, v
-        v1.position.x, v1.position.y, v1.position.z, v1.color.r, v1.color.g, v1.color.b, v1.color.a, 0.0f, 0.0f,
-        v2.position.x, v2.position.y, v2.position.z, v2.color.r, v2.color.g, v2.color.b, v2.color.a, 1.0f, 0.0f,
-        v3.position.x, v3.position.y, v3.position.z, v3.color.r, v3.color.g, v3.color.b, v3.color.a, 0.0f, 1.0f,
-    };
-
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0); // position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-
-    glEnableVertexAttribArray(1); // color
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-
-    glEnableVertexAttribArray(2); // uv
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
-
-    useShader("default");
-    glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
-    setUniformMat4("default", "uMVP", mvp);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // reset
-
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
-}
-
-void Graphics::fillTriangle(const Vertex& v1, const Vertex& v2, const Vertex& v3) {
-    useShader("default");
-    bindTexture(getDefaultTexture());
-
-    float vertices[] = {
-        // x, y, z,    r, g, b, a,     u, v
-        v1.position.x, v1.position.y, v1.position.z, v1.color.r, v1.color.g, v1.color.b, v1.color.a, 0.0f, 0.0f,
-        v2.position.x, v2.position.y, v2.position.z, v2.color.r, v2.color.g, v2.color.b, v2.color.a, 1.0f, 0.0f,
-        v3.position.x, v3.position.y, v3.position.z, v3.color.r, v3.color.g, v3.color.b, v3.color.a, 0.0f, 1.0f,
-    };
-
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0); // position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-
-    glEnableVertexAttribArray(1); // color
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-
-    glEnableVertexAttribArray(2); // uv
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
-
-    useShader("default");
-    glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
-    setUniformMat4("default", "uMVP", mvp);
-
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
-}
-
-void Graphics::drawCircle(const Vertex& vertex, float radius, int segments) {
-    useShader("default");
-    bindTexture(getDefaultTexture());
-
-    std::vector<float> vertices;
-    vertices.reserve((segments + 2) * 9);
-
-    // Center vertex (UV = 0.5, 0.5 - center of texture)
-    vertices.push_back(vertex.position.x);
-    vertices.push_back(vertex.position.y);
-    vertices.push_back(0.0f);
-    vertices.push_back(vertex.color.r);
-    vertices.push_back(vertex.color.g);
-    vertices.push_back(vertex.color.b);
-    vertices.push_back(vertex.color.a);
-    vertices.push_back(0.5f);
-    vertices.push_back(0.5f);
-
-    for (int i = 0; i <= segments; ++i) {
-        float angle = 2.0f * M_PI * i / segments;
-        float x = vertex.position.x + radius * cos(angle);
-        float y = vertex.position.y + radius * sin(angle);
-
-        // UVs mapped from -radius..radius to 0..1 (circle centered at 0.5,0.5)
-        float u = 0.5f + 0.5f * cos(angle);
-        float v = 0.5f + 0.5f * sin(angle);
-
-        vertices.push_back(x);
-        vertices.push_back(y);
-        vertices.push_back(0.0f);
-        vertices.push_back(vertex.color.r);
-        vertices.push_back(vertex.color.g);
-        vertices.push_back(vertex.color.b);
-        vertices.push_back(vertex.color.a);
-        vertices.push_back(u);
-        vertices.push_back(v);
-    }
-
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
-
-    useShader("default");
-    glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
-    setUniformMat4("default", "uMVP", mvp);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, segments + 2);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // reset
-
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
-}
-
-void Graphics::fillCircle(const Vertex& vertex, float radius, int segments) {
-    useShader("default");
-    bindTexture(getDefaultTexture());
-
-    std::vector<float> vertices;
-    vertices.reserve((segments + 2) * 9);
-
-    // Center vertex (UV = 0.5, 0.5 - center of texture)
-    vertices.push_back(vertex.position.x);
-    vertices.push_back(vertex.position.y);
-    vertices.push_back(0.0f);
-    vertices.push_back(vertex.color.r);
-    vertices.push_back(vertex.color.g);
-    vertices.push_back(vertex.color.b);
-    vertices.push_back(vertex.color.a);
-    vertices.push_back(0.5f);
-    vertices.push_back(0.5f);
-
-    for (int i = 0; i <= segments; ++i) {
-        float angle = 2.0f * M_PI * i / segments;
-        float x = vertex.position.x + radius * cos(angle);
-        float y = vertex.position.y + radius * sin(angle);
-
-        // UVs mapped from -radius..radius to 0..1 (circle centered at 0.5,0.5)
-        float u = 0.5f + 0.5f * cos(angle);
-        float v = 0.5f + 0.5f * sin(angle);
-
-        vertices.push_back(x);
-        vertices.push_back(y);
-        vertices.push_back(0.0f);
-        vertices.push_back(vertex.color.r);
-        vertices.push_back(vertex.color.g);
-        vertices.push_back(vertex.color.b);
-        vertices.push_back(vertex.color.a);
-        vertices.push_back(u);
-        vertices.push_back(v);
-    }
-
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
-
-    useShader("default");
-    glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
-    setUniformMat4("default", "uMVP", mvp);
-
-    glDrawArrays(GL_TRIANGLE_FAN, 0, segments + 2);
-
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
-}
-
-void Graphics::drawPolygon(const std::vector<Vertex>& positions) {
-    useShader("default");
-    bindTexture(getDefaultTexture());
-    if (positions.size() < 3) {
-        std::cerr << "drawPolygon: need at least 3 vertices\n";
-        return;
-    }
-
-    // Compute bounding box of polygon vertices
-    float minX = positions[0].position.x, maxX = positions[0].position.x;
-    float minY = positions[0].position.x, maxY = positions[0].position.y;
-
-    for (const auto& pos : positions) {
-        if (pos.position.x < minX) minX = pos.position.x;
-        if (pos.position.x > maxX) maxX = pos.position.x;
-        if (pos.position.y < minY) minY = pos.position.y;
-        if (pos.position.y > maxY) maxY = pos.position.y;
-    }
-
-    std::vector<float> vertices;
-    vertices.reserve(positions.size() * 9); // pos(3) + color(4) + uv(2)
-
-    for (const auto& pos : positions) {
-        float u = (pos.position.x - minX) / (maxX - minX);
-        float v = (pos.position.y - minY) / (maxY - minY);
-
-        vertices.push_back(pos.position.x);
-        vertices.push_back(pos.position.y);
-        vertices.push_back(pos.position.z);
-
-        // White color (no tint)
-        vertices.push_back(pos.color.r);
-        vertices.push_back(pos.color.g);
-        vertices.push_back(pos.color.b);
-        vertices.push_back(pos.color.a);
-
-        vertices.push_back(u);
-        vertices.push_back(v);
-    }
-
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
-
-    // Position attribute (location = 0)
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-
-    // Color attribute (location = 1)
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-
-    // UV attribute (location = 2)
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
-
-    useShader("default");
-
-    glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
-    setUniformMat4("default", "uMVP", mvp);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, (GLsizei)positions.size());
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // reset
-
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
-}
-
-
-void Graphics::fillPolygon(const std::vector<Vertex>& positions) {
-    useShader("default");
-    bindTexture(getDefaultTexture());
-    if (positions.size() < 3) {
-        std::cerr << "drawPolygon: need at least 3 vertices\n";
-        return;
-    }
-
-    // Compute bounding box of polygon vertices
-    float minX = positions[0].position.x, maxX = positions[0].position.x;
-    float minY = positions[0].position.x, maxY = positions[0].position.y;
-
-    for (const auto& pos : positions) {
-        if (pos.position.x < minX) minX = pos.position.x;
-        if (pos.position.x > maxX) maxX = pos.position.x;
-        if (pos.position.y < minY) minY = pos.position.y;
-        if (pos.position.y > maxY) maxY = pos.position.y;
-    }
-
-    std::vector<float> vertices;
-    vertices.reserve(positions.size() * 9); // pos(3) + color(4) + uv(2)
-
-    for (const auto& pos : positions) {
-        float u = (pos.position.x - minX) / (maxX - minX);
-        float v = (pos.position.y - minY) / (maxY - minY);
-
-        vertices.push_back(pos.position.x);
-        vertices.push_back(pos.position.y);
-        vertices.push_back(pos.position.z);
-
-        // White color (no tint)
-        vertices.push_back(pos.color.r);
-        vertices.push_back(pos.color.g);
-        vertices.push_back(pos.color.b);
-        vertices.push_back(pos.color.a);
-
-        vertices.push_back(u);
-        vertices.push_back(v);
-    }
-
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
-
-    // Position attribute (location = 0)
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-
-    // Color attribute (location = 1)
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-
-    // UV attribute (location = 2)
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
-
-    useShader("default");
-
-    glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
-    setUniformMat4("default", "uMVP", mvp);
-
-    glDrawArrays(GL_TRIANGLE_FAN, 0, (GLsizei)positions.size());
-
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
-}
+// void Graphics::drawTriangle(const Vertex& v1, const Vertex& v2, const Vertex& v3) {
+//     useShader("default");
+//     bindTexture(getDefaultTexture());
+//
+//     float vertices[] = {
+//         // x, y, z,    r, g, b, a,     u, v
+//         v1.position.x, v1.position.y, v1.position.z, v1.color.r, v1.color.g, v1.color.b, v1.color.a, 0.0f, 0.0f,
+//         v2.position.x, v2.position.y, v2.position.z, v2.color.r, v2.color.g, v2.color.b, v2.color.a, 1.0f, 0.0f,
+//         v3.position.x, v3.position.y, v3.position.z, v3.color.r, v3.color.g, v3.color.b, v3.color.a, 0.0f, 1.0f,
+//     };
+//
+//     GLuint vao, vbo;
+//     glGenVertexArrays(1, &vao);
+//     glGenBuffers(1, &vbo);
+//
+//     glBindVertexArray(vao);
+//     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+//
+//     glEnableVertexAttribArray(0); // position
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+//
+//     glEnableVertexAttribArray(1); // color
+//     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+//
+//     glEnableVertexAttribArray(2); // uv
+//     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
+//
+//     useShader("default");
+//     glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
+//     setUniformMat4("default", "uMVP", mvp);
+//
+//     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//     glDrawArrays(GL_TRIANGLES, 0, 3);
+//     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // reset
+//
+//     glBindVertexArray(0);
+//     glDeleteBuffers(1, &vbo);
+//     glDeleteVertexArrays(1, &vao);
+// }
+
+// void Graphics::fillTriangle(const Vertex& v1, const Vertex& v2, const Vertex& v3) {
+//     useShader("default");
+//     bindTexture(getDefaultTexture());
+//
+//     float vertices[] = {
+//         // x, y, z,    r, g, b, a,     u, v
+//         v1.position.x, v1.position.y, v1.position.z, v1.color.r, v1.color.g, v1.color.b, v1.color.a, 0.0f, 0.0f,
+//         v2.position.x, v2.position.y, v2.position.z, v2.color.r, v2.color.g, v2.color.b, v2.color.a, 1.0f, 0.0f,
+//         v3.position.x, v3.position.y, v3.position.z, v3.color.r, v3.color.g, v3.color.b, v3.color.a, 0.0f, 1.0f,
+//     };
+//
+//     GLuint vao, vbo;
+//     glGenVertexArrays(1, &vao);
+//     glGenBuffers(1, &vbo);
+//
+//     glBindVertexArray(vao);
+//     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+//
+//     glEnableVertexAttribArray(0); // position
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+//
+//     glEnableVertexAttribArray(1); // color
+//     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+//
+//     glEnableVertexAttribArray(2); // uv
+//     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
+//
+//     useShader("default");
+//     glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
+//     setUniformMat4("default", "uMVP", mvp);
+//
+//     glDrawArrays(GL_TRIANGLES, 0, 3);
+//
+//     glBindVertexArray(0);
+//     glDeleteBuffers(1, &vbo);
+//     glDeleteVertexArrays(1, &vao);
+// }
+
+// void Graphics::drawCircle(const Vertex& vertex, float radius, int segments) {
+//     useShader("default");
+//     bindTexture(getDefaultTexture());
+//
+//     std::vector<float> vertices;
+//     vertices.reserve((segments + 2) * 9);
+//
+//     // Center vertex (UV = 0.5, 0.5 - center of texture)
+//     vertices.push_back(vertex.position.x);
+//     vertices.push_back(vertex.position.y);
+//     vertices.push_back(0.0f);
+//     vertices.push_back(vertex.color.r);
+//     vertices.push_back(vertex.color.g);
+//     vertices.push_back(vertex.color.b);
+//     vertices.push_back(vertex.color.a);
+//     vertices.push_back(0.5f);
+//     vertices.push_back(0.5f);
+//
+//     for (int i = 0; i <= segments; ++i) {
+//         float angle = 2.0f * M_PI * i / segments;
+//         float x = vertex.position.x + radius * cos(angle);
+//         float y = vertex.position.y + radius * sin(angle);
+//
+//         // UVs mapped from -radius..radius to 0..1 (circle centered at 0.5,0.5)
+//         float u = 0.5f + 0.5f * cos(angle);
+//         float v = 0.5f + 0.5f * sin(angle);
+//
+//         vertices.push_back(x);
+//         vertices.push_back(y);
+//         vertices.push_back(0.0f);
+//         vertices.push_back(vertex.color.r);
+//         vertices.push_back(vertex.color.g);
+//         vertices.push_back(vertex.color.b);
+//         vertices.push_back(vertex.color.a);
+//         vertices.push_back(u);
+//         vertices.push_back(v);
+//     }
+//
+//     GLuint vao, vbo;
+//     glGenVertexArrays(1, &vao);
+//     glGenBuffers(1, &vbo);
+//
+//     glBindVertexArray(vao);
+//     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+//
+//     glEnableVertexAttribArray(0);
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+//     glEnableVertexAttribArray(1);
+//     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+//     glEnableVertexAttribArray(2);
+//     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
+//
+//     useShader("default");
+//     glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
+//     setUniformMat4("default", "uMVP", mvp);
+//
+//     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//     glDrawArrays(GL_TRIANGLE_FAN, 0, segments + 2);
+//     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // reset
+//
+//     glBindVertexArray(0);
+//     glDeleteBuffers(1, &vbo);
+//     glDeleteVertexArrays(1, &vao);
+// }
+
+// void Graphics::fillCircle(const Vertex& vertex, float radius, int segments) {
+//     useShader("default");
+//     bindTexture(getDefaultTexture());
+//
+//     std::vector<float> vertices;
+//     vertices.reserve((segments + 2) * 9);
+//
+//     // Center vertex (UV = 0.5, 0.5 - center of texture)
+//     vertices.push_back(vertex.position.x);
+//     vertices.push_back(vertex.position.y);
+//     vertices.push_back(0.0f);
+//     vertices.push_back(vertex.color.r);
+//     vertices.push_back(vertex.color.g);
+//     vertices.push_back(vertex.color.b);
+//     vertices.push_back(vertex.color.a);
+//     vertices.push_back(0.5f);
+//     vertices.push_back(0.5f);
+//
+//     for (int i = 0; i <= segments; ++i) {
+//         float angle = 2.0f * M_PI * i / segments;
+//         float x = vertex.position.x + radius * cos(angle);
+//         float y = vertex.position.y + radius * sin(angle);
+//
+//         // UVs mapped from -radius..radius to 0..1 (circle centered at 0.5,0.5)
+//         float u = 0.5f + 0.5f * cos(angle);
+//         float v = 0.5f + 0.5f * sin(angle);
+//
+//         vertices.push_back(x);
+//         vertices.push_back(y);
+//         vertices.push_back(0.0f);
+//         vertices.push_back(vertex.color.r);
+//         vertices.push_back(vertex.color.g);
+//         vertices.push_back(vertex.color.b);
+//         vertices.push_back(vertex.color.a);
+//         vertices.push_back(u);
+//         vertices.push_back(v);
+//     }
+//
+//     GLuint vao, vbo;
+//     glGenVertexArrays(1, &vao);
+//     glGenBuffers(1, &vbo);
+//
+//     glBindVertexArray(vao);
+//     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+//
+//     glEnableVertexAttribArray(0);
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+//     glEnableVertexAttribArray(1);
+//     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+//     glEnableVertexAttribArray(2);
+//     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
+//
+//     useShader("default");
+//     glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
+//     setUniformMat4("default", "uMVP", mvp);
+//
+//     glDrawArrays(GL_TRIANGLE_FAN, 0, segments + 2);
+//
+//     glBindVertexArray(0);
+//     glDeleteBuffers(1, &vbo);
+//     glDeleteVertexArrays(1, &vao);
+// }
+
+// void Graphics::drawPolygon(const std::vector<Vertex>& positions) {
+//     useShader("default");
+//     bindTexture(getDefaultTexture());
+//     if (positions.size() < 3) {
+//         std::cerr << "drawPolygon: need at least 3 vertices\n";
+//         return;
+//     }
+//
+//     // Compute bounding box of polygon vertices
+//     float minX = positions[0].position.x, maxX = positions[0].position.x;
+//     float minY = positions[0].position.x, maxY = positions[0].position.y;
+//
+//     for (const auto& pos : positions) {
+//         if (pos.position.x < minX) minX = pos.position.x;
+//         if (pos.position.x > maxX) maxX = pos.position.x;
+//         if (pos.position.y < minY) minY = pos.position.y;
+//         if (pos.position.y > maxY) maxY = pos.position.y;
+//     }
+//
+//     std::vector<float> vertices;
+//     vertices.reserve(positions.size() * 9); // pos(3) + color(4) + uv(2)
+//
+//     for (const auto& pos : positions) {
+//         float u = (pos.position.x - minX) / (maxX - minX);
+//         float v = (pos.position.y - minY) / (maxY - minY);
+//
+//         vertices.push_back(pos.position.x);
+//         vertices.push_back(pos.position.y);
+//         vertices.push_back(pos.position.z);
+//
+//         // White color (no tint)
+//         vertices.push_back(pos.color.r);
+//         vertices.push_back(pos.color.g);
+//         vertices.push_back(pos.color.b);
+//         vertices.push_back(pos.color.a);
+//
+//         vertices.push_back(u);
+//         vertices.push_back(v);
+//     }
+//
+//     GLuint vao, vbo;
+//     glGenVertexArrays(1, &vao);
+//     glGenBuffers(1, &vbo);
+//
+//     glBindVertexArray(vao);
+//     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+//
+//     // Position attribute (location = 0)
+//     glEnableVertexAttribArray(0);
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+//
+//     // Color attribute (location = 1)
+//     glEnableVertexAttribArray(1);
+//     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+//
+//     // UV attribute (location = 2)
+//     glEnableVertexAttribArray(2);
+//     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
+//
+//     useShader("default");
+//
+//     glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
+//     setUniformMat4("default", "uMVP", mvp);
+//
+//     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//     glDrawArrays(GL_TRIANGLE_FAN, 0, (GLsizei)positions.size());
+//     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // reset
+//
+//     glBindVertexArray(0);
+//     glDeleteBuffers(1, &vbo);
+//     glDeleteVertexArrays(1, &vao);
+// }
+
+
+// void Graphics::fillPolygon(const std::vector<Vertex>& positions) {
+//     useShader("default");
+//     bindTexture(getDefaultTexture());
+//     if (positions.size() < 3) {
+//         std::cerr << "drawPolygon: need at least 3 vertices\n";
+//         return;
+//     }
+//
+//     // Compute bounding box of polygon vertices
+//     float minX = positions[0].position.x, maxX = positions[0].position.x;
+//     float minY = positions[0].position.x, maxY = positions[0].position.y;
+//
+//     for (const auto& pos : positions) {
+//         if (pos.position.x < minX) minX = pos.position.x;
+//         if (pos.position.x > maxX) maxX = pos.position.x;
+//         if (pos.position.y < minY) minY = pos.position.y;
+//         if (pos.position.y > maxY) maxY = pos.position.y;
+//     }
+//
+//     std::vector<float> vertices;
+//     vertices.reserve(positions.size() * 9); // pos(3) + color(4) + uv(2)
+//
+//     for (const auto& pos : positions) {
+//         float u = (pos.position.x - minX) / (maxX - minX);
+//         float v = (pos.position.y - minY) / (maxY - minY);
+//
+//         vertices.push_back(pos.position.x);
+//         vertices.push_back(pos.position.y);
+//         vertices.push_back(pos.position.z);
+//
+//         // White color (no tint)
+//         vertices.push_back(pos.color.r);
+//         vertices.push_back(pos.color.g);
+//         vertices.push_back(pos.color.b);
+//         vertices.push_back(pos.color.a);
+//
+//         vertices.push_back(u);
+//         vertices.push_back(v);
+//     }
+//
+//     GLuint vao, vbo;
+//     glGenVertexArrays(1, &vao);
+//     glGenBuffers(1, &vbo);
+//
+//     glBindVertexArray(vao);
+//     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+//
+//     // Position attribute (location = 0)
+//     glEnableVertexAttribArray(0);
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+//
+//     // Color attribute (location = 1)
+//     glEnableVertexAttribArray(1);
+//     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+//
+//     // UV attribute (location = 2)
+//     glEnableVertexAttribArray(2);
+//     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
+//
+//     useShader("default");
+//
+//     glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
+//     setUniformMat4("default", "uMVP", mvp);
+//
+//     glDrawArrays(GL_TRIANGLE_FAN, 0, (GLsizei)positions.size());
+//
+//     glBindVertexArray(0);
+//     glDeleteBuffers(1, &vbo);
+//     glDeleteVertexArrays(1, &vao);
+// }
 
 Camera* Graphics::getCamera() {
     return &m_camera;
 }
 
 
-void Graphics::drawTexture(Texture texture,
-                           const glm::vec3& p0,
-                           const glm::vec3& p1,
-                           const glm::vec3& p2,
-                           const glm::vec3& p3) {
-    useShader("default");
-    bindTexture(texture.getData());
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    // Ensure the shader’s sampler uniform is set (assuming currentProgram is active)
-    GLint loc = glGetUniformLocation(currentProgram, "uTexture");
-    if (loc >= 0) glUniform1i(loc, 0);
-
-    std::vector<glm::vec3> positions = { p0, p1, p2, p3 };
-    std::vector<glm::vec2> uvs = {
-        {0.0f, 0.0f},
-        {1.0f, 0.0f},
-        {1.0f, 1.0f},
-        {0.0f, 1.0f}
-    };
-
-    // Build vertex data manually here with colors = white (like drawPolygon)
-    std::vector<float> vertices;
-    vertices.reserve(4 * 9);
-
-    for (size_t i = 0; i < 4; ++i) {
-        vertices.push_back(positions[i].x);
-        vertices.push_back(positions[i].y);
-        vertices.push_back(positions[i].z);
-
-        vertices.push_back(1.0f); // r
-        vertices.push_back(1.0f); // g
-        vertices.push_back(1.0f); // b
-        vertices.push_back(1.0f); // a
-
-        vertices.push_back(uvs[i].x);
-        vertices.push_back(uvs[i].y);
-    }
-
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
-
-    useShader("default");
-    glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
-    setUniformMat4("default", "uMVP", mvp);
-
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
-}
+// void Graphics::drawTexture(Texture texture,
+//                            const glm::vec3& p0,
+//                            const glm::vec3& p1,
+//                            const glm::vec3& p2,
+//                            const glm::vec3& p3) {
+//     useShader("default");
+//     bindTexture(texture.getData());
+//
+//     glGenVertexArrays(1, &VAO);
+//     glGenBuffers(1, &VBO);
+//     glBindVertexArray(VAO);
+//     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+//
+//     // Ensure the shader’s sampler uniform is set (assuming currentProgram is active)
+//     GLint loc = glGetUniformLocation(currentProgram, "uTexture");
+//     if (loc >= 0) glUniform1i(loc, 0);
+//
+//     std::vector<glm::vec3> positions = { p0, p1, p2, p3 };
+//     std::vector<glm::vec2> uvs = {
+//         {0.0f, 0.0f},
+//         {1.0f, 0.0f},
+//         {1.0f, 1.0f},
+//         {0.0f, 1.0f}
+//     };
+//
+//     // Build vertex data manually here with colors = white (like drawPolygon)
+//     std::vector<float> vertices;
+//     vertices.reserve(4 * 9);
+//
+//     for (size_t i = 0; i < 4; ++i) {
+//         vertices.push_back(positions[i].x);
+//         vertices.push_back(positions[i].y);
+//         vertices.push_back(positions[i].z);
+//
+//         vertices.push_back(1.0f); // r
+//         vertices.push_back(1.0f); // g
+//         vertices.push_back(1.0f); // b
+//         vertices.push_back(1.0f); // a
+//
+//         vertices.push_back(uvs[i].x);
+//         vertices.push_back(uvs[i].y);
+//     }
+//
+//     GLuint vao, vbo;
+//     glGenVertexArrays(1, &vao);
+//     glGenBuffers(1, &vbo);
+//
+//     glBindVertexArray(vao);
+//     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+//
+//     glEnableVertexAttribArray(0);
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+//
+//     glEnableVertexAttribArray(1);
+//     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+//
+//     glEnableVertexAttribArray(2);
+//     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(7 * sizeof(float)));
+//
+//     useShader("default");
+//     glm::mat4 mvp = m_projection * m_camera.getViewMatrix();
+//     setUniformMat4("default", "uMVP", mvp);
+//
+//     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+//
+//     glBindVertexArray(0);
+//     glDeleteBuffers(1, &vbo);
+//     glDeleteVertexArrays(1, &vao);
+// }
 
 bool Graphics::loadFont(const unsigned char* fontBuffer, int fontBufferSize, float pixelHeight) {
     // Allocate bitmap for baking font atlas
@@ -756,3 +782,34 @@ GLuint Graphics::getDefaultTexture() {
     return whiteTexture;
 }
 
+// Called once when adding shape
+void Graphics::addShape(std::shared_ptr<Shape> shape) {
+    if (!shape) return;
+
+    shape->updateBuffers();  // Upload vertex data to VBO/VAO ONCE
+    shapes.push_back(shape);
+}
+
+// Called every frame
+void Graphics::render() {
+    glm::mat4 view = m_camera.getViewMatrix();
+    glm::mat4 projection = m_projection;
+
+    for (const auto& shape : shapes) {
+        if (!shape) continue;
+
+        if (!shape->isVisible) {
+            // Perform occlusion query with the occlusion shader on simplified geometry
+            useShader("occlusion");
+            GLuint occlusionShader = shaderPrograms["occlusion"];
+            shape->drawOcclusionQuery(view, projection, occlusionShader);
+            // Query results update isVisible elsewhere
+        }
+        else {
+            // Render normally with color/texture shader
+            useShader("default");
+            GLuint defaultShader = shaderPrograms["default"];
+            shape->draw(view, projection, defaultShader);
+        }
+    }
+}

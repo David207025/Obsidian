@@ -34,7 +34,7 @@ public:
     float pitch; // up/down rotation in degrees
     float yaw;   // left/right rotation in degrees
 
-    Camera(glm::vec3 startPos, float startPitch = 0.f, float startYaw = 90.f)
+    Camera(glm::vec3 startPos, float startPitch = 0.f, float startYaw = 0.f)
         : position(startPos), pitch(startPitch), yaw(startYaw) {}
 
     glm::mat4 getViewMatrix() {

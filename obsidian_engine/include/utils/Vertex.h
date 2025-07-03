@@ -8,7 +8,10 @@
 struct Vertex {
     glm::vec3 position;
     glm::vec4 color;
-    Vertex(glm::vec3 position, glm::vec4 color) : position(position), color(color) {};
+    glm::vec2 uv;
+    Vertex(glm::vec3 position, glm::vec4 color, glm::vec2 uv) : position(position), color(color), uv(uv) {};
+
 };
 
 #endif //VERTEX_H
+

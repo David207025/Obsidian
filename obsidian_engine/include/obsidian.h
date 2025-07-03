@@ -20,7 +20,7 @@ public:
 
     void run(bool cappedFPS);
 
-    void addKeyBinding(int key, std::function<void()> action);
+    void addKeyBinding(int key, std::function<void(float)> action);
 
     void removeKeyBinding(int key);
 
@@ -29,6 +29,7 @@ protected:
     virtual void onDraw(Graphics& graphics) {};
     virtual void onDestroy() {};
     virtual void onFpsUpdate(float fps) {};
+    virtual void onFrameDrawn(float deltaTime) {};
 
     GLFWwindow* getWindow() const;
 
@@ -47,7 +48,8 @@ private:
     Clock::time_point m_lastTime;
     Clock::time_point m_fpsLastReport;
     int m_frameCount = 0;
-    std::unordered_map<int, std::function<void()>> keyBindings;
+    std::unordered_map<int, std::function<void(float)>> keyBindings;
+
 };
 
 #endif // OBSIDIAN_H

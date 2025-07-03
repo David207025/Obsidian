@@ -84,15 +84,20 @@ void Obsidian::run(bool cappedFPS) {
         glfwSwapBuffers(m_window);
         glfwPollEvents();
 
-        for (const auto& [key, action] : keyBindings) {
-            if (glfwGetKey(m_window, key) == GLFW_PRESS) {
-                action();  // Execute the lambda
-            }
-        }
+
 
         auto currentTime = Clock::now();
         std::chrono::duration<float> delta = currentTime - m_lastTime;
         m_lastTime = currentTime;
+        float deltaTime = delta.count();
+
+        for (const auto& [key, action] : keyBindings) {
+            if (glfwGetKey(m_window, key) == GLFW_PRESS) {
+                action(deltaTime);  // Execute the lambda
+            }
+        }
+
+        onFrameDrawn(deltaTime);
 
         // FPS tracking
         m_frameCount++;
@@ -116,7 +121,7 @@ void Obsidian::framebuffer_size_callback(GLFWwindow *window, int width, int heig
     glViewport(0, 0, width, height);
 }
 
-void Obsidian::addKeyBinding(int key, std::function<void()> action) {
+void Obsidian::addKeyBinding(int key, std::function<void(float)> action) {
     keyBindings[key] = std::move(action);
 }
 
