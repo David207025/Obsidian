@@ -18,6 +18,7 @@ struct LightSource {
     float intensity = 1.0f;
     float cutoff = glm::cos(glm::radians(12.5f)); // For spotlight if ever needed
     float radius = 100;
+    float depth = 0;
 
     // Shadow mapping resources
     GLuint shadowFBO = 0;

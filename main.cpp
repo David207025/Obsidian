@@ -63,16 +63,18 @@ public:
 
         sphere = Shape::createCircle(100);
         sphere->translate(glm::vec2(0, 0));
+        sphere->depth = 0;
 
         std::shared_ptr<LightSource> spotLight = std::make_shared<LightSource>(LightType::Ambient, glm::vec3(0, 0, 0), glm::vec3(0, -1, 0));
-        spotLight->intensity = 2;
+        spotLight->intensity = 0.5;
 
 
-        auto spotlight = std::make_shared<LightSource>(LightType::Point, glm::vec2(1.f, 100.f), glm::vec2(-1.f, 0.f));
+        auto spotlight = std::make_shared<LightSource>(LightType::Point, glm::vec2(200.f, 0.f), glm::vec2(-1.f, 0.f));
         spotlight->color = glm::vec3(1.f, 1.f, 0.8f);
         spotlight->intensity = 1.f;
         spotlight->cutoff = glm::cos(glm::radians(30.f));
         spotlight->radius = 500;
+        spotlight->depth = 1;
 
         spotlight->initShadowResources(2048, 2048);
 

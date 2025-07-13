@@ -361,43 +361,90 @@ void Graphics::render() {
     // Clear screen
     clear(0, 0, 0, 1);
 
-    // Draw fullscreen quad spotlight glow first
+    // Combine shapes and lights into one sorted list
+    struct RenderItem {
+        enum class Kind { Light, Shape } kind;
+        float depth;
+        std::shared_ptr<LightSource> light;
+        std::shared_ptr<Shape> shape;
+    };
+
+    std::vector<RenderItem> items;
+
     for (const auto& light : lights) {
-        if (light->type == LightType::Directional || light->type == LightType::Point) {
+        if (light) {
+            items.push_back({ RenderItem::Kind::Light, light->depth, light, nullptr });
+        }
+    }
+
+    for (const auto& shape : shapes) {
+        if (shape && shape->isVisible) {
+            items.push_back({RenderItem::Kind::Shape, shape->depth, nullptr, shape});
+        }
+    }
+
+    std::sort(items.begin(), items.end(), [](const RenderItem& a, const RenderItem& b) {
+        if (a.depth != b.depth)
+            return a.depth < b.depth;
+        return a.kind == RenderItem::Kind::Light && b.kind == RenderItem::Kind::Shape;
+    });
+
+    // Shader handles
+    GLuint quadShader = shaderPrograms["fullscreenQuad"];
+    GLuint defaultShader = shaderPrograms["default"];
+
+    // Set light uniforms once for shapes
+    useShader("default");
+    GLint numLightsLoc = glGetUniformLocation(defaultShader, "uNumLights");
+    glUniform1i(numLightsLoc, static_cast<int>(lights.size()));
+
+    for (int i = 0; i < lights.size(); ++i) {
+        const auto& light = lights[i];
+        std::string base = "uLights[" + std::to_string(i) + "]";
+        glm::vec3 pos3 = glm::vec3(light->position, 0.0f);
+        glm::vec3 dir3 = glm::vec3(light->direction, 0.0f);
+
+        glUniform1i(glGetUniformLocation(defaultShader, (base + ".type").c_str()), static_cast<int>(light->type));
+        glUniform3fv(glGetUniformLocation(defaultShader, (base + ".position").c_str()), 1, &pos3[0]);
+        glUniform3fv(glGetUniformLocation(defaultShader, (base + ".direction").c_str()), 1, &dir3[0]);
+        glUniform3fv(glGetUniformLocation(defaultShader, (base + ".color").c_str()), 1, &light->color[0]);
+        glUniform1f(glGetUniformLocation(defaultShader, (base + ".intensity").c_str()), light->intensity);
+        glUniform1f(glGetUniformLocation(defaultShader, (base + ".cutoff").c_str()), light->cutoff);
+    }
+
+    // Draw all items sorted by depth
+    for (const auto& item : items) {
+        if (item.kind == RenderItem::Kind::Light) {
+            const auto& light = item.light;
+            if (light->type != LightType::Directional && light->type != LightType::Point) continue;
+
             useShader("fullscreenQuad");
 
-            glm::mat4 model = glm::mat4(1.0f); // full-screen quad, no transform
-            glm::mat4 mvp = m_projection * view * model;
+            glm::mat4 model = glm::mat4(1.0f);
+            glm::mat4 mvp = projection * view * model;
 
-            glUniformMatrix4fv(glGetUniformLocation(currentProgram, "uModel"), 1, GL_FALSE, &model[0][0]);
-            glUniformMatrix4fv(glGetUniformLocation(currentProgram, "uMVP"), 1, GL_FALSE, &mvp[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(quadShader, "uModel"), 1, GL_FALSE, &model[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(quadShader, "uMVP"), 1, GL_FALSE, &mvp[0][0]);
 
-            glUniform2fv(glGetUniformLocation(currentProgram, "uLightPos"), 1, &light->position[0]);
-            glUniform2fv(glGetUniformLocation(currentProgram, "uLightDir"), 1, &light->direction[0]);
-            glUniform1f(glGetUniformLocation(currentProgram, "uCutoff"), light->cutoff);
-            glUniform3fv(glGetUniformLocation(currentProgram, "uLightColor"), 1, &light->color[0]);
-            glUniform1f(glGetUniformLocation(currentProgram, "uIntensity"), light->intensity);
-            glUniform1f(glGetUniformLocation(currentProgram, "uRadius"), light->radius);
+            glUniform2fv(glGetUniformLocation(quadShader, "uLightPos"), 1, &light->position[0]);
+            glUniform2fv(glGetUniformLocation(quadShader, "uLightDir"), 1, &light->direction[0]);
+            glUniform1f(glGetUniformLocation(quadShader, "uCutoff"), light->cutoff);
+            glUniform3fv(glGetUniformLocation(quadShader, "uLightColor"), 1, &light->color[0]);
+            glUniform1f(glGetUniformLocation(quadShader, "uIntensity"), light->intensity);
+            glUniform1f(glGetUniformLocation(quadShader, "uRadius"), light->radius);
 
             glBindVertexArray(fullscreenQuadVAO);
             glDrawArrays(GL_TRIANGLES, 0, 6);
             glBindVertexArray(0);
+
+        } else if (item.kind == RenderItem::Kind::Shape) {
+            const auto& shape = item.shape;
+            useShader("default");
+
+            GLint modelLoc = glGetUniformLocation(defaultShader, "uModel");
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &shape->modelMatrix[0][0]);
+
+            shape->draw(view, projection, defaultShader);
         }
-    }
-
-    // Draw scene shapes normally
-    useShader("default");
-    GLuint defaultShader = shaderPrograms["default"];
-
-    GLint numLightsLoc = glGetUniformLocation(defaultShader, "uNumLights");
-    glUniform1i(numLightsLoc, static_cast<int>(lights.size()));
-
-    for (const auto& shape : shapes) {
-        if (!shape || !shape->isVisible) continue;
-
-        GLint modelLoc = glGetUniformLocation(defaultShader, "uModel");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &shape->modelMatrix[0][0]);
-
-        shape->draw(view, projection, defaultShader);
     }
 }

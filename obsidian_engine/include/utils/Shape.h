@@ -24,6 +24,7 @@ public:
     glm::mat4 modelMatrix = glm::mat4(1.0f);
     bool isVisible = true;
     GLuint queryID = 0;  // For occlusion queries
+    float depth = 0;
 
     Shape(const std::vector<Vertex>& verts, Texture tex, PrimitiveType primType = PrimitiveType::Triangles);
 

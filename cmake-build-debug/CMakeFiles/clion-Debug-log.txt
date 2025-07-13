@@ -2,6 +2,6 @@
 -- Including Cocoa support
 -- Could NOT find Doxygen (missing: DOXYGEN_EXECUTABLE) 
 -- Documentation generation requires Doxygen 1.9.8 or later
--- Configuring done (0.0s)
--- Generating done (0.0s)
+-- Configuring done (0.1s)
+-- Generating done (0.1s)
 -- Build files have been written to: /Users/davidvacaroiu/Documents/_Code_/_CLion_/obsidian/cmake-build-debug
