@@ -23,6 +23,7 @@ add_library(glad STATIC
         obsidian_engine/source/utils/Shape.cpp
         obsidian_engine/include/utils/Object.h
         obsidian_engine/source/utils/Object.cpp
+        obsidian_engine/include/utils/LightSource.h
 )
 target_include_directories(glad PUBLIC include)
 

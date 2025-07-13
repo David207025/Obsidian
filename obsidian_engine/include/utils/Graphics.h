@@ -4,6 +4,7 @@
 #include "./Camera.h"
 #include "./Shape.h"
 #include "./Font.h"
+#include "LightSource.h"
 #include "../includes.h"
 
 class Obsidian;
@@ -30,12 +31,14 @@ public:
     void clear(float r, float g, float b, float a);
 
     void addShape(std::shared_ptr<Shape> shape);
+    void addLight(std::shared_ptr<LightSource> source);
     void render();  // Renders all visible shapes
 
     // Shader / Texture / Uniform utilities
     bool loadShader(const std::string& vertexSrc, const std::string& fragmentSrc, const std::string& shaderName);
     void useShader(const std::string& shaderName);
     void setUniformMat4(const std::string& shaderName, const std::string& uniform, const glm::mat4& matrix);
+    void renderLightGlow(const LightSource& light);
     void bindTexture(GLuint tex);
 
     GLuint loadTexture(const std::string& path, GLint filtering = GL_LINEAR);
@@ -43,8 +46,8 @@ public:
 
     // Text rendering
     bool loadFont(const unsigned char* fontBuffer, int fontBufferSize, float pixelHeight = 32.0f);
-    void renderText(const std::string& text, const glm::vec3& position, float scale,
-                    glm::vec3 color, glm::vec3 rotationEuler = glm::vec3(0.0f));
+    void renderText(const std::string& text, const glm::vec2& position, float scale,
+                    glm::vec3 color, float rotationDegrees = 0.0f);
 
     void cleanup();
 
@@ -60,10 +63,11 @@ private:
     GLuint whiteTexture = 0;
     GLuint VAO = 0, VBO = 0;
 
-    Camera m_camera = Camera(glm::vec3(0, 0, 0));
+    Camera m_camera = Camera(glm::vec2(0.f, 0.f));
     Font m_font;
 
     std::vector<std::shared_ptr<Shape>> shapes;  // Collection of shapes to render
+    std::vector<std::shared_ptr<LightSource>> lights;
 };
 
 #endif // GRAPHICS_H
